@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">NewsAppWithSingleList</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="save">SAVE</string>
+    <string name="finish">FINISH</string>
+    <string name="enter_some_text">Enter some text</string>
+    <string name="news">News</string>
+    <string name="draft">Draft</string>
+    <string name="complete">Complete</string>
+</resources>
