@@ -12,20 +12,18 @@ import com.example.newsappwithsinglelist.databinding.FragmentRecyclerViewBinding
 
 class RecyclerViewFragment() : Fragment(),RecyclerItemClickListener {
     private lateinit var binding: FragmentRecyclerViewBinding
-    private var recyclerViewDataList= listOf<News>()
     private lateinit var draftAndCompleteViewModel: DraftAndCompleteViewModel
     private lateinit var adapter:NewsRecyclerViewAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-
+    ): View {
         binding = FragmentRecyclerViewBinding.inflate(inflater, container, false)
         binding.newsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         draftAndCompleteViewModel= ViewModelProvider(requireActivity())[DraftAndCompleteViewModel::class.java]
         //SETTING RECYCLER VIEW ADAPTER
-        recyclerViewDataList=draftAndCompleteViewModel.returnNewsList().toList()
+        val recyclerViewDataList=draftAndCompleteViewModel.returnNewsList().toList()
         adapter = NewsRecyclerViewAdapter(recyclerViewDataList,this)
         binding.newsRecyclerView.adapter=adapter
 
@@ -34,39 +32,58 @@ class RecyclerViewFragment() : Fragment(),RecyclerItemClickListener {
             val newBodyText=bundle.getString(GetAndShowNewsItemFragment.keyForBodyText)
             val index=bundle.getInt(GetAndShowNewsItemFragment.keyForPosition)
             val timeSpent=bundle.getLong(GetAndShowNewsItemFragment.keyForTimeSpent)
-            newBodyText?.let {
-                draftAndCompleteViewModel.updateDetailsForDraftItemInNewsList(index,
-                    it,timeSpent)
+            if (newBodyText != null) {
+                val list = draftAndCompleteViewModel.returnNewsList().toMutableList()
+                for (i in list.indices){
+                    if (list[i].id==index){
+                        val heading= list[i].heading
+                        val newTimeSpent=list[i].timeSpent+timeSpent
+                        list[i]=News(index, heading = heading,newBodyText,newTimeSpent,NewsItemType.DRAFT)
+                        adapter.setData(list)
+                        draftAndCompleteViewModel.updateDetailsForDraftItemInDraftList(index,newBodyText,newTimeSpent)
+                    }
+                }
             }
-            val newList:List<News> = draftAndCompleteViewModel.returnNewsList().toList()
-            adapter.setData(newList)
         }
 
         //FRAGMENT RESULT LISTENER FOR FINISH BUTTON EVENT
         parentFragmentManager.setFragmentResultListener(GetAndShowNewsItemFragment.updateCompleteAndDraftItemEvent, this) { _, bundle ->
             val newBodyText=bundle.getString(GetAndShowNewsItemFragment.keyForBodyText)
-            val position=bundle.getInt(GetAndShowNewsItemFragment.keyForPosition)
+            val index=bundle.getInt(GetAndShowNewsItemFragment.keyForPosition)
             val timeSpent=bundle.getLong(GetAndShowNewsItemFragment.keyForTimeSpent)
             val heading=bundle.getString(GetAndShowNewsItemFragment.keyForHeading)
             if(heading!=null && newBodyText!=null){
-                draftAndCompleteViewModel.updateDetailsForDraftItemInNewsList(position,null,timeSpent)
-                val draftItem=draftAndCompleteViewModel.returnDraftItemFromNewsList(position)
-                draftAndCompleteViewModel.removeDraftItemFromNewsList(position)
-                if (draftItem != null) {
-                    draftAndCompleteViewModel.addCompleteItemInNewsList(News(position,heading,newBodyText,draftItem.timeSpent,NewsItemType.COMPLETE))
+                val list = draftAndCompleteViewModel.returnNewsList().toMutableList()
+                var newTimeSpent:Long
+                for (i in list.indices){
+                    if (list[i].id==index&&list[i].type==NewsItemType.DRAFT){
+                        val existingHeading= list[i].heading
+                        newTimeSpent=list[i].timeSpent+timeSpent
+                        list.removeAt(i)
+                        list.add(News(index, heading = existingHeading,newBodyText,newTimeSpent,NewsItemType.COMPLETE))
+                        draftAndCompleteViewModel.addCompleteItemInCompleteList(News(index,heading,newBodyText,newTimeSpent,NewsItemType.COMPLETE))
+                        draftAndCompleteViewModel.removeDraftItemFromDraftList(index)
+                        adapter.setData(list)
+                    }
                 }
             }
-            val newList:List<News> = draftAndCompleteViewModel.returnNewsList().toList()
-            adapter.setData(newList)
         }
 
         //FRAGMENT RESULT LISTENER FOR BACK BUTTON EVENT
         parentFragmentManager.setFragmentResultListener(GetAndShowNewsItemFragment.updateTimeSpentEvent, this) { _, bundle ->
-            val position=bundle.getInt(GetAndShowNewsItemFragment.keyForPosition)
+            val index=bundle.getInt(GetAndShowNewsItemFragment.keyForPosition)
             val timeSpent=bundle.getLong(GetAndShowNewsItemFragment.keyForTimeSpent)
-            draftAndCompleteViewModel.updateDetailsForDraftItemInNewsList(position,null,timeSpent)
-            val newList:List<News> = draftAndCompleteViewModel.returnNewsList().toList()
-            adapter.setData(newList)
+            val list = draftAndCompleteViewModel.returnNewsList().toList().toMutableList()
+            for (i in list.indices){
+                if (list[i].id==index){
+                    val existingHeading= list[i].heading
+                    val existingBodyText=list[i].body
+                    val newTimeSpent=list[i].timeSpent+timeSpent
+                    list[i]=News(index, heading = existingHeading,existingBodyText,newTimeSpent,NewsItemType.DRAFT)
+                    adapter.setData(list)
+                    draftAndCompleteViewModel.updateDetailsForDraftItemInDraftList(index,null,timeSpent)
+                }
+            }
         }
         return binding.root
     }
@@ -107,8 +124,6 @@ class RecyclerViewFragment() : Fragment(),RecyclerItemClickListener {
     }
 
     companion object {
-        const val fragmentDraftKey = "fragment_1"
-        const val fragmentCompleteKey = "fragment_2"
         const val fragmentDisplayKey="fragment"
         const val bundleKeyForIsDraft="bundle_key_for_is_Draft"
         const val bundleKeyForBody="bundle_key_for_body"

@@ -1,7 +1,6 @@
 package com.example.newsappwithsinglelist
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -15,13 +14,11 @@ class GetAndShowNewsItemFragment : Fragment() {
     private lateinit var binding: FragmentGetAndShowNewsItemBinding
     private lateinit var callBack: OnBackPressedCallback
     private var startTime: Long = 0
-    private var endTime: Long = 0
-    private var fragmentResultType: FragmentResultType?=null
+    private var fragmentResultType: FragmentResultType? = null
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        startTime = System.currentTimeMillis()
+    ): View {
         binding = FragmentGetAndShowNewsItemBinding.inflate(inflater, container, false)
 
         //SETTING THE FRAGMENT ACCORDING TO DRAFT OR COMPLETE NEED
@@ -41,13 +38,10 @@ class GetAndShowNewsItemFragment : Fragment() {
         callBack = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 fragmentResultType = FragmentResultType.BACK
-                val bundle = loadCommonDetailsForFragmentResultBundle()
                 updateActionBar()
-                parentFragmentManager.setFragmentResult(updateDraftItemEvent, bundle)
                 parentFragmentManager.popBackStack()
             }
         }
-
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callBack)
         return binding.root
     }
@@ -76,23 +70,14 @@ class GetAndShowNewsItemFragment : Fragment() {
         //SAVE BUTTON CLICK LISTENER
         binding.saveButton.setOnClickListener {
             fragmentResultType = FragmentResultType.SAVE
-            val bundle = loadCommonDetailsForFragmentResultBundle()
-            bundle.putString(keyForBodyText, binding.editText.text.toString())
             updateActionBar()
-            parentFragmentManager.setFragmentResult(updateDraftItemEvent, bundle)
             parentFragmentManager.popBackStack()
         }
 
         //FINISH BUTTON CLICK LISTENER
         binding.finishButton.setOnClickListener {
             fragmentResultType = FragmentResultType.FINISH
-            val bundle = loadCommonDetailsForFragmentResultBundle()
-            bundle.putString(keyForBodyText, binding.editText.text.toString())
-            arguments?.getString(RecyclerViewFragment.bundleKeyForHeading)?.let {
-                bundle.putString(keyForHeading, it)
-            }
             updateActionBar()
-            parentFragmentManager.setFragmentResult(updateCompleteAndDraftItemEvent, bundle)
             parentFragmentManager.popBackStack()
         }
     }
@@ -132,13 +117,11 @@ class GetAndShowNewsItemFragment : Fragment() {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
 
-    //PUTTING TIME AND EDIT TEXT INTO ARGUMENTS DURING SAVED INSTANCE
+    //PUTTING EDIT TEXT INTO ARGUMENTS DURING SAVED INSTANCE
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         arguments?.getBoolean(RecyclerViewFragment.bundleKeyForIsDraft)?.let {
             if (it) {
-                endTime = System.currentTimeMillis()
-                arguments?.putLong(keyForSavedTimeSpent, endTime - startTime)
                 arguments?.putString(keyForSavedBodyText, binding.editText.text.toString())
             }
         }
@@ -146,55 +129,41 @@ class GetAndShowNewsItemFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        //PREPARING TO HANDLE TIME IF NEXT LIFECYCLE CALLBACK IS ON RESUME
-        Log.d("test1","onPause")
-        if (fragmentResultType != FragmentResultType.FINISH && fragmentResultType != FragmentResultType.BACK && fragmentResultType != FragmentResultType.SAVE && fragmentResultType != FragmentResultType.REPLACE) {
-            fragmentResultType = FragmentResultType.PAUSE
+        arguments?.getBoolean(RecyclerViewFragment.bundleKeyForIsDraft)?.let {
+            if (it) {
+                val bundle = Bundle()
+                val endTime = System.currentTimeMillis()
+                arguments?.getInt(RecyclerViewFragment.bundleKeyForPosition)?.let {
+                    bundle.putInt(keyForPosition, it)
+                }
+                bundle.putLong(keyForTimeSpent, endTime - startTime)
+                when (fragmentResultType) {
+                    FragmentResultType.SAVE -> {
+                        bundle.putString(keyForBodyText, binding.editText.text.toString())
+                        parentFragmentManager.setFragmentResult(updateDraftItemEvent, bundle)
+                    }
+
+                    FragmentResultType.FINISH -> {
+                        bundle.putString(keyForBodyText, binding.editText.text.toString())
+                        arguments?.getString(RecyclerViewFragment.bundleKeyForHeading)?.let {
+                            bundle.putString(keyForHeading, it)
+                        }
+                        parentFragmentManager.setFragmentResult(
+                            updateCompleteAndDraftItemEvent,
+                            bundle
+                        )
+                    }
+                    else -> {
+                        parentFragmentManager.setFragmentResult(updateTimeSpentEvent, bundle)
+                    }
+                }
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d("test1","onResume")
-        //HANDLE TIME SPENT EVENT ON PAUSE TO ON RESUME CONDITION
-        if (fragmentResultType != null) {
-            if (fragmentResultType == FragmentResultType.PAUSE) {
-                val bundle = Bundle()
-                arguments?.getInt(RecyclerViewFragment.bundleKeyForPosition)?.let {
-                    bundle.putInt(keyForPosition, it)
-                }
-                if (arguments?.getLong(keyForSavedTimeSpent) != null) {
-                    arguments?.getLong(keyForSavedTimeSpent)?.let {
-                        bundle.putLong(keyForTimeSpent, it + (endTime - startTime))
-                    }
-                }
-                parentFragmentManager.setFragmentResult(updateTimeSpentEvent, bundle)
-            }
-        }
-    }
-
-    override fun onStop() {
-        //HANDLE TIME SPENT EVENT ON ON STOP CONDITION
-        super.onStop()
-        if (fragmentResultType != FragmentResultType.FINISH && fragmentResultType != FragmentResultType.BACK && fragmentResultType != FragmentResultType.SAVE && fragmentResultType != FragmentResultType.PAUSE){
-            fragmentResultType=FragmentResultType.STOP
-            val bundle = loadCommonDetailsForFragmentResultBundle()
-            updateActionBar()
-            parentFragmentManager.setFragmentResult(updateTimeSpentEvent, bundle)
-        }
-
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        //HANDLE TIME SPENT EVENT ON REPLACING THE FRAGMENT
-        fragmentResultType=FragmentResultType.REPLACE
-        if (fragmentResultType != FragmentResultType.FINISH && fragmentResultType != FragmentResultType.BACK && fragmentResultType != FragmentResultType.SAVE && fragmentResultType != FragmentResultType.PAUSE&&fragmentResultType!=FragmentResultType.STOP) {
-            fragmentResultType = FragmentResultType.REPLACE
-            val bundle = loadCommonDetailsForFragmentResultBundle()
-            updateActionBar()
-            parentFragmentManager.setFragmentResult(updateDraftItemEvent, bundle)
-        }
+        startTime = System.currentTimeMillis()
     }
 
     companion object {
@@ -205,28 +174,12 @@ class GetAndShowNewsItemFragment : Fragment() {
         const val keyForTimeSpent = "key_for_time_spent"
         const val keyForPosition = "key_for_position"
         const val keyForHeading = "key_for_heading"
-        const val keyForSavedTimeSpent = "key_for_saved_time_spent"
         const val keyForSavedBodyText = "key_for_saved_body_text"
     }
 
     private fun updateActionBar() {
         (activity as MainActivity).supportActionBar?.setDisplayHomeAsUpEnabled(false)
         (activity as MainActivity).supportActionBar?.title = getString(R.string.news)
-    }
-    private fun loadCommonDetailsForFragmentResultBundle(): Bundle {
-        val bundle = Bundle()
-        endTime = System.currentTimeMillis()
-        arguments?.getInt(RecyclerViewFragment.bundleKeyForPosition)?.let {
-            bundle.putInt(keyForPosition, it)
-        }
-        if (arguments?.getLong(keyForSavedTimeSpent) != null) {
-            arguments?.getLong(keyForSavedTimeSpent)?.let {
-                bundle.putLong(keyForTimeSpent, it + (endTime - startTime))
-            }
-        } else {
-            bundle.putLong(keyForTimeSpent, endTime - startTime)
-        }
-        return bundle
     }
 
 }

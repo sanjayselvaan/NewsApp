@@ -7,5 +7,6 @@
     <color name="backgroundPrimaryColor">#80FFFFFF</color>
     <color name="getAndShowFragmentButtonColor">#85C8FC</color>
     <color name="darkGreen">#18322F</color>
-    <color name="bodyColor">#BF000000</color>
+    <color name="bodyColor">#FFFFFFFF</color>
+    <color name="textColor">#FF000000</color>
 </resources>

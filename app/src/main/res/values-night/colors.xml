@@ -8,5 +8,5 @@
     <color name="getAndShowFragmentButtonColor">#D9E26C47</color>
     <color name="darkGreen">#18322F</color>
     <color name="bodyColor">#BF000000</color>
-
+    <color name="textColor">#FFFFFFFF</color>
 </resources>

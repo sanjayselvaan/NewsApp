@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -24,7 +25,7 @@
                 android:layout_alignParentStart="true"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="@color/black"/>
+                android:textColor="@color/textColor"/>
 
             <TextView
                 android:id="@+id/tvCompleteItemBody"
@@ -34,14 +35,14 @@
                 android:layout_below="@+id/tvCompleteItemHeading"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:textColor="@color/bodyColor"/>
+                android:textColor="@color/textColor"/>
             <TextView
                 android:id="@+id/tvCompleteItemTimeSpent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="24sp"
                 android:layout_alignParentEnd="true"
-                android:textColor="@color/bodyColor"/>
+                android:textColor="@color/textColor" />
 
         </RelativeLayout>
 

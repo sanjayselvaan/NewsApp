@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
             ViewModelProvider(this)[DraftAndCompleteViewModel::class.java]
         if (savedInstanceState == null) {
             //ORIENTATION HANDLE FOR SAVED INSTANCE NULL
-            draftAndCompleteViewModel.populateDataInNewsList()
+            draftAndCompleteViewModel.populateDataInDraftList()
             if (orientation == Configuration.ORIENTATION_PORTRAIT) {
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.container1, RecyclerViewFragment())

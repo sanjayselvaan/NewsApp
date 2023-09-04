@@ -29,7 +29,7 @@
                 android:textSize="18sp"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:textColor="@color/bodyColor"/>
+                android:textColor="@color/black"/>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

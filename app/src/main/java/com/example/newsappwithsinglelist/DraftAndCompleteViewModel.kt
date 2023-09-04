@@ -3,8 +3,10 @@ package com.example.newsappwithsinglelist
 import androidx.lifecycle.ViewModel
 
 class DraftAndCompleteViewModel : ViewModel() {
-    private var newsList = mutableListOf<News>()
-    fun populateDataInNewsList() {
+    private var draftList = mutableListOf<News>()
+    private var completeList = mutableListOf<News>()
+    private var newsList = listOf<News>()
+    fun populateDataInDraftList() {
         val headingList = mutableListOf(
             "One",
             "Two",
@@ -51,55 +53,60 @@ class DraftAndCompleteViewModel : ViewModel() {
         )
         for (i in bodyList.indices) {
             val draftNews = News(i, headingList[i], bodyList[i], 0, NewsItemType.DRAFT)
-            newsList.add(i, draftNews)
+            draftList.add(i, draftNews)
         }
     }
 
 
-    fun updateDetailsForDraftItemInNewsList(index: Int, newBodyText: String?, newTimeSpent: Long?) {
-        val position = returnPositionForDraftItemInNewsList(index)
+    fun updateDetailsForDraftItemInDraftList(id: Int, newBodyText: String?, newTimeSpent: Long) {
+        val position = returnPositionForDraftItemInDraftList(id)
         if (position != null) {
+            val existingHeading = draftList[position].heading
+            val updatedTime=draftList[position].timeSpent+newTimeSpent
             if (newBodyText != null) {
-                newsList[position].body = newBodyText
-            }
-            if (newTimeSpent != null) {
-                newsList[position].timeSpent += newTimeSpent
+                draftList[position] = News(
+                    id,
+                    existingHeading,
+                    newBodyText,
+                    timeSpent = updatedTime,
+                    NewsItemType.DRAFT
+                )
+            } else {
+                val existingBody = draftList[position].body
+                val updatedTime=draftList[position].timeSpent+newTimeSpent
+                draftList[position] = News(
+                    id,
+                    existingHeading,
+                    existingBody,
+                    timeSpent = updatedTime,
+                    NewsItemType.DRAFT
+                )
             }
         }
     }
 
-    fun removeDraftItemFromNewsList(index: Int) {
-        returnPositionForDraftItemInNewsList(index)?.let {
-            newsList.removeAt(it)
+    fun removeDraftItemFromDraftList(id: Int) {
+        returnPositionForDraftItemInDraftList(id)?.let {
+            draftList.removeAt(it)
         }
-
     }
 
-    private fun returnPositionForDraftItemInNewsList(index: Int): Int? {
+    private fun returnPositionForDraftItemInDraftList(id: Int): Int? {
         var position: Int? = null
-        for (i in 0 until newsList.size) {
-            if (newsList[i].index == index) {
-                if (newsList[i].type == NewsItemType.DRAFT) {
-                    position = i
-                }
+        for (i in 0 until draftList.size) {
+            if (draftList[i].id == id) {
+                position = i
             }
         }
         return position
     }
 
-    fun addCompleteItemInNewsList(newsItem: News) {
-        newsList.add(newsItem)
+    fun addCompleteItemInCompleteList(newsItem: News) {
+        completeList.add(newsItem)
     }
 
-    fun returnDraftItemFromNewsList(index: Int): News? {
-        var newsItem: News? = null
-        returnPositionForDraftItemInNewsList(index)?.let {
-            newsItem = newsList[it]
-        }
-        return newsItem
-    }
-
-    fun returnNewsList(): MutableList<News> {
+    fun returnNewsList(): List<News> {
+        newsList = (draftList + completeList)
         return newsList
     }
 
